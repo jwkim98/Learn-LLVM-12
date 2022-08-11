@@ -53,7 +53,7 @@ void Sema::checkFormalAndActualParameters(
           Loc,
           diag::
               err_type_of_formal_and_actual_parameter_not_compatible);
-    if (F->isVar() && isa<VariableAccess>(Arg))
+    if (F->isVar() && llvm::isa<VariableAccess>(Arg))
       Diags.report(Loc,
                    diag::err_var_parameter_requires_var);
   }
@@ -119,7 +119,7 @@ void Sema::actOnVariableDeclaration(DeclList &Decls,
                                     IdentList &Ids,
                                     Decl *D) {
   assert(CurrentScope && "CurrentScope not set");
-  if (TypeDeclaration *Ty = dyn_cast<TypeDeclaration>(D)) {
+  if (TypeDeclaration *Ty = llvm::dyn_cast<TypeDeclaration>(D)) {
     for (auto I = Ids.begin(), E = Ids.end(); I != E; ++I) {
       SMLoc Loc = I->first;
       StringRef Name = I->second;
@@ -140,7 +140,7 @@ void Sema::actOnFormalParameterDeclaration(
     FormalParamList &Params, IdentList &Ids, Decl *D,
     bool IsVar) {
   assert(CurrentScope && "CurrentScope not set");
-  if (TypeDeclaration *Ty = dyn_cast<TypeDeclaration>(D)) {
+  if (TypeDeclaration *Ty = llvm::dyn_cast<TypeDeclaration>(D)) {
     for (auto I = Ids.begin(), E = Ids.end(); I != E; ++I) {
       SMLoc Loc = I->first;
       StringRef Name = I->second;
@@ -172,7 +172,7 @@ void Sema::actOnProcedureHeading(
     Decl *RetType) {
   ProcDecl->setFormalParams(Params);
   auto RetTypeDecl =
-      dyn_cast_or_null<TypeDeclaration>(RetType);
+      llvm::dyn_cast_or_null<TypeDeclaration>(RetType);
   if (!RetTypeDecl && RetType)
     Diags.report(RetType->getLocation(),
                  diag::err_returntype_must_be_type);
@@ -195,7 +195,7 @@ void Sema::actOnProcedureDeclaration(
 
 void Sema::actOnAssignment(StmtList &Stmts, SMLoc Loc,
                            Decl *D, Expr *E) {
-  if (auto Var = dyn_cast<VariableDeclaration>(D)) {
+  if (auto Var = llvm::dyn_cast<VariableDeclaration>(D)) {
     if (Var->getType() != E->getType()) {
       Diags.report(
           Loc, diag::err_types_for_operator_not_compatible,
@@ -209,7 +209,7 @@ void Sema::actOnAssignment(StmtList &Stmts, SMLoc Loc,
 
 void Sema::actOnProcCall(StmtList &Stmts, SMLoc Loc,
                          Decl *D, ExprList &Params) {
-  if (auto Proc = dyn_cast<ProcedureDeclaration>(D)) {
+  if (auto Proc = llvm::dyn_cast<ProcedureDeclaration>(D)) {
     checkFormalAndActualParameters(
         Loc, Proc->getFormalParams(), Params);
     if (Proc->getRetType())
@@ -250,7 +250,7 @@ void Sema::actOnWhileStatement(StmtList &Stmts, SMLoc Loc,
 
 void Sema::actOnReturnStatement(StmtList &Stmts, SMLoc Loc,
                                 Expr *RetVal) {
-  auto *Proc = cast<ProcedureDeclaration>(CurrentDecl);
+  auto *Proc = llvm::cast<ProcedureDeclaration>(CurrentDecl);
   if (Proc->getRetType() && !RetVal)
     Diags.report(Loc, diag::err_function_requires_return);
   else if (!Proc->getRetType() && RetVal)
@@ -299,8 +299,8 @@ Expr *Sema::actOnSimpleExpression(Expr *Left, Expr *Right,
   TypeDeclaration *Ty = Left->getType();
   bool IsConst = Left->isConst() && Right->isConst();
   if (IsConst && Op.getKind() == tok::kw_OR) {
-    BooleanLiteral *L = dyn_cast<BooleanLiteral>(Left);
-    BooleanLiteral *R = dyn_cast<BooleanLiteral>(Right);
+    BooleanLiteral *L = llvm::dyn_cast<BooleanLiteral>(Left);
+    BooleanLiteral *R = llvm::dyn_cast<BooleanLiteral>(Right);
     return L->getValue() || R->getValue() ? TrueLiteral
                                           : FalseLiteral;
   }
@@ -325,8 +325,8 @@ Expr *Sema::actOnTerm(Expr *Left, Expr *Right,
   TypeDeclaration *Ty = Left->getType();
   bool IsConst = Left->isConst() && Right->isConst();
   if (IsConst && Op.getKind() == tok::kw_AND) {
-    BooleanLiteral *L = dyn_cast<BooleanLiteral>(Left);
-    BooleanLiteral *R = dyn_cast<BooleanLiteral>(Right);
+    BooleanLiteral *L = llvm::dyn_cast<BooleanLiteral>(Left);
+    BooleanLiteral *R = llvm::dyn_cast<BooleanLiteral>(Right);
     return L->getValue() && R->getValue() ? TrueLiteral
                                           : FalseLiteral;
   }
@@ -346,16 +346,16 @@ Expr *Sema::actOnPrefixExpression(Expr *E,
   }
 
   if (E->isConst() && Op.getKind() == tok::kw_NOT) {
-    BooleanLiteral *L = dyn_cast<BooleanLiteral>(E);
+    BooleanLiteral *L = llvm::dyn_cast<BooleanLiteral>(E);
     return L->getValue() ? FalseLiteral : TrueLiteral;
   }
 
   if (Op.getKind() == tok::minus) {
     bool Ambiguous = true;
-    if (isa<IntegerLiteral>(E) || isa<VariableAccess>(E) ||
-        isa<ConstantAccess>(E))
+    if (llvm::isa<IntegerLiteral>(E) || llvm::isa<VariableAccess>(E) ||
+        llvm::isa<ConstantAccess>(E))
       Ambiguous = false;
-    else if (auto *Infix = dyn_cast<InfixExpression>(E)) {
+    else if (auto *Infix = llvm::dyn_cast<InfixExpression>(E)) {
       tok::TokenKind Kind =
           Infix->getOperatorInfo().getKind();
       if (Kind == tok::star || Kind == tok::slash)
@@ -386,11 +386,11 @@ Expr *Sema::actOnIntegerLiteral(SMLoc Loc,
 Expr *Sema::actOnVariable(Decl *D) {
   if (!D)
     return nullptr;
-  if (auto *V = dyn_cast<VariableDeclaration>(D))
+  if (auto *V = llvm::dyn_cast<VariableDeclaration>(D))
     return new VariableAccess(V);
-  else if (auto *P = dyn_cast<FormalParameterDeclaration>(D))
+  else if (auto *P = llvm::dyn_cast<FormalParameterDeclaration>(D))
     return new VariableAccess(P);
-  else if (auto *C = dyn_cast<ConstantDeclaration>(D)) {
+  else if (auto *C = llvm::dyn_cast<ConstantDeclaration>(D)) {
     if (C == TrueConst)
       return TrueLiteral;
     if (C == FalseConst) {
@@ -404,7 +404,7 @@ Expr *Sema::actOnVariable(Decl *D) {
 Expr *Sema::actOnFunctionCall(Decl *D, ExprList &Params) {
   if (!D)
     return nullptr;
-  if (auto *P = dyn_cast<ProcedureDeclaration>(D)) {
+  if (auto *P = llvm::dyn_cast<ProcedureDeclaration>(D)) {
     checkFormalAndActualParameters(
         D->getLocation(), P->getFormalParams(), Params);
     if (!P->getRetType())
@@ -423,7 +423,7 @@ Decl *Sema::actOnQualIdentPart(Decl *Prev, SMLoc Loc,
     if (Decl *D = CurrentScope->lookup(Name))
       return D;
   } else if (auto *Mod =
-                 dyn_cast<ModuleDeclaration>(Prev)) {
+      llvm::dyn_cast<ModuleDeclaration>(Prev)) {
     auto Decls = Mod->getDecls();
     for (auto I = Decls.begin(), E = Decls.end(); I != E;
          ++I) {

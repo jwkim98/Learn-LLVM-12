@@ -3,6 +3,7 @@
 
 #include "tinylang/Basic/Diagnostic.h"
 #include "tinylang/Lexer/Lexer.h"
+#include "tinylang/Lexer/Token.h"
 #include "tinylang/Sema/Sema.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/MemoryBuffer.h"

@@ -1,4 +1,7 @@
 #include "tinylang/CodeGen/CGProcedure.h"
+
+#include "tinylang/AST/AST.h"
+
 #include "llvm/IR/CFG.h"
 #include "llvm/Support/Casting.h"
 

@@ -1,5 +1,10 @@
 #include "tinylang/Parser/Parser.h"
+
+#include "tinylang/AST/AST.h"
 #include "tinylang/Basic/TokenKinds.h"
+#include "tinylang/Lexer/Lexer.h"
+#include "tinylang/Sema/Sema.h"
+#include "tinylang/Lexer/Token.h"
 
 using namespace tinylang;
 

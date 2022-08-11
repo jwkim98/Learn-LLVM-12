@@ -34,27 +34,34 @@ public:
   bool isOneOf(tok::TokenKind K1, tok::TokenKind K2) const {
     return is(K1) || is(K2);
   }
+  /// True if one of the given kind matches current token
   template <typename... Ts>
   bool isOneOf(tok::TokenKind K1, tok::TokenKind K2,
                Ts... Ks) const {
     return is(K1) || isOneOf(K2, Ks...);
   }
 
+  //! Returns name of the current token as a string
   const char *getName() const {
     return tok::getTokenName(Kind);
   }
 
+  //! Returns location of current token in the source file
   SMLoc getLocation() const {
     return SMLoc::getFromPointer(Ptr);
   }
+
+  //! Returns length of the token
   size_t getLength() const { return Length; }
 
+  //! Returns current token as stringRef(text) if this token is identifier
   StringRef getIdentifier() {
     assert(is(tok::identifier) &&
            "Cannot get identfier of non-identifier");
     return StringRef(Ptr, Length);
   }
 
+  //! Returns current token as stringRef(text) if this token is LiteralData
   StringRef getLiteralData() {
     assert(isOneOf(tok::integer_literal,
                    tok::string_literal) &&

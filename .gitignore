@@ -1,0 +1,12 @@
+
+Chapter04/build/
+
+Chapter04/tinylang/.vs/
+
+Chapter05/build/
+
+*.o
+
+*.a
+
+Chapter04/tinylang/out/build/WSL-GCC-Debug/

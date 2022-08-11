@@ -29,3 +29,8 @@
 .vs
 # clangd index
 .clangd
+build
+Chapter04/build/*
+Chapter05/build/*
+*.ll
+*.o

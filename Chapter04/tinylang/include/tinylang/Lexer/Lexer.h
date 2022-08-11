@@ -3,7 +3,7 @@
 
 #include "tinylang/Basic/Diagnostic.h"
 #include "tinylang/Basic/LLVM.h"
-#include "tinylang/Lexer/Token.h"
+#include "tinylang/Parser/Token.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/MemoryBuffer.h"
@@ -12,6 +12,8 @@
 namespace tinylang {
 
 class KeywordFilter {
+  //! this is a hash table representing
+  //! stringRef->tok::TokenKind
   llvm::StringMap<tok::TokenKind> HashTable;
 
   void addKeyword(StringRef Keyword,
@@ -20,13 +22,16 @@ class KeywordFilter {
 public:
   void addKeywords();
 
+  //! This function will return the token kind of the given
+  //! string or a default value if the string odes not
+  //! represent a keyword
   tok::TokenKind getKeyword(
-      StringRef Name,
-      tok::TokenKind DefaultTokenCode = tok::unknown) {
-    auto Result = HashTable.find(Name);
-    if (Result != HashTable.end())
-      return Result->second;
-    return DefaultTokenCode;
+      StringRef name,
+      tok::TokenKind defaultTokenCode = tok::unknown) {
+    auto result = HashTable.find(name);
+    if (result != HashTable.end())
+      return result->second;
+    return defaultTokenCode;
   }
 };
 

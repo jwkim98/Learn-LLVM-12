@@ -1,8 +1,11 @@
 #include "tinylang/Basic/Diagnostic.h"
 #include "tinylang/Basic/Version.h"
 #include "tinylang/CodeGen/CodeGenerator.h"
+#include "tinylang/Lexer/Lexer.h"
 #include "tinylang/Parser/Parser.h"
-#include "llvm/CodeGen/CommandFlags.h"
+#include "tinylang/Sema/Sema.h"
+
+#include "llvm/CodeGen/CommandFlags.inc"
 #include "llvm/IR/IRPrintingPasses.h"
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/Support/CommandLine.h"
@@ -17,7 +20,7 @@
 using namespace llvm;
 using namespace tinylang;
 
-static codegen::RegisterCodeGenFlags CGF;
+//static codegen::RegisterCodeGenFlags CGF;
 
 static llvm::cl::list<std::string>
     InputFiles(llvm::cl::Positional,
@@ -55,13 +58,13 @@ createTargetMachine(const char *Argv0) {
           : llvm::sys::getDefaultTargetTriple());
 
   llvm::TargetOptions TargetOptions =
-      codegen::InitTargetOptionsFromCodeGenFlags(Triple);
-  std::string CPUStr = codegen::getCPUStr();
-  std::string FeatureStr = codegen::getFeaturesStr();
+      InitTargetOptionsFromCodeGenFlags();
+  std::string CPUStr = getCPUStr();
+  std::string FeatureStr = getFeaturesStr();
 
   std::string Error;
   const llvm::Target *Target =
-      llvm::TargetRegistry::lookupTarget(codegen::getMArch(), Triple,
+      llvm::TargetRegistry::lookupTarget(MArch, Triple,
                                          Error);
 
   if (!Target) {
@@ -71,14 +74,14 @@ createTargetMachine(const char *Argv0) {
 
   llvm::TargetMachine *TM = Target->createTargetMachine(
       Triple.getTriple(), CPUStr, FeatureStr, TargetOptions,
-      llvm::Optional<llvm::Reloc::Model>(codegen::getRelocModel()));
+      llvm::Optional<llvm::Reloc::Model>(getRelocModel()));
   return TM;
 }
 
 bool emit(StringRef Argv0, llvm::Module *M,
           llvm::TargetMachine *TM,
           StringRef InputFilename) {
-  CodeGenFileType FileType = codegen::getFileType();
+  CodeGenFileType FileType = CGFT_AssemblyFile;
   std::string OutputFilename;
   if (InputFilename == "-") {
     OutputFilename = "-";
@@ -139,8 +142,8 @@ int main(int Argc, const char **Argv) {
   llvm::cl::SetVersionPrinter(&printVersion);
   llvm::cl::ParseCommandLineOptions(Argc, Argv, Head);
 
-  if (codegen::getMCPU() == "help" ||
-      std::any_of(codegen::getMAttrs().begin(), codegen::getMAttrs().end(),
+  if (MCPU == "help" ||
+      std::any_of(MAttrs.begin(), MAttrs.end(),
                   [](const std::string &a) {
                     return a == "help";
                   })) {
@@ -153,8 +156,8 @@ int main(int Argc, const char **Argv) {
       // this prints the available CPUs and features of the
       // target to stderr...
       target->createMCSubtargetInfo(Triple.getTriple(),
-                                    codegen::getCPUStr(),
-                                    codegen::getFeaturesStr());
+                                    getCPUStr(),
+                                    getFeaturesStr());
     } else {
       llvm::errs() << ErrMsg << "\n";
       exit(EXIT_FAILURE);

@@ -1,5 +1,7 @@
 #include "tinylang/Lexer/Lexer.h"
 
+#include <utility>
+
 using namespace tinylang;
 
 void KeywordFilter::addKeyword(StringRef Keyword,
