@@ -9,7 +9,7 @@
 #include "llvm/Support/InitLLVM.h"
 #include "llvm/Support/Host.h"
 #include "llvm/Support/MemoryBuffer.h"
-#include "llvm/Support/TargetRegistry.h"
+#include "llvm/MC/TargetRegistry.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/ToolOutputFile.h"
 #include "llvm/Support/WithColor.h"
@@ -103,11 +103,14 @@ bool emit(StringRef Argv0, llvm::Module *M,
 
   // Open the file.
   std::error_code EC;
-  sys::fs::OpenFlags OpenFlags = sys::fs::OF_None;
+  sys::fs::OpenFlags ofNone = static_cast<sys::fs::OpenFlags>(0); //! OF_None
+  sys::fs::OpenFlags ofText = static_cast<sys::fs::OpenFlags>(1); //! OF_Text
+  sys::fs::OpenFlags flag = ofNone;
   if (FileType == CGFT_AssemblyFile)
-    OpenFlags |= sys::fs::OF_Text;
+    flag = static_cast<sys::fs::OpenFlags>(
+        flag | ofText);//! OF_Text
   auto Out = std::make_unique<llvm::ToolOutputFile>(
-      OutputFilename, EC, OpenFlags);
+      OutputFilename, EC, flag);
   if (EC) {
     WithColor::error(llvm::errs(), Argv0) << EC.message() << '\n';
     return false;
@@ -115,7 +118,8 @@ bool emit(StringRef Argv0, llvm::Module *M,
 
   legacy::PassManager PM;
   if (FileType == CGFT_AssemblyFile && EmitLLVM) {
-    PM.add(createPrintModulePass(Out->os()));
+    auto* os = createPrintModulePass(Out->os());
+    PM.add(reinterpret_cast<Pass*>(os));
   } else {
     if (TM->addPassesToEmitFile(PM, Out->os(), nullptr,
                                 FileType)) {

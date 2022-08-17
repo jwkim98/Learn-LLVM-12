@@ -198,7 +198,7 @@ CGProcedure::createFunction(ProcedureDeclaration *Proc,
     FormalParameterDeclaration *FP =
         Proc->getFormalParams()[Idx];
     if (FP->isVar()) {
-      llvm::AttrBuilder Attr;
+      llvm::AttrBuilder Attr(CGM.getLLVMCtx());
       llvm::TypeSize Sz =
           CGM.getModule()->getDataLayout().getTypeStoreSize(
               CGM.convertType(FP->getType()));
