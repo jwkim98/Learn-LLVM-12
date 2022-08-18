@@ -49,6 +49,8 @@ void CGModule::run(ModuleDeclaration *Mod) {
           /*isConstant=*/false,
           llvm::GlobalValue::PrivateLinkage, nullptr,
           mangleName(Var));
+      llvm::ConstantInt* constVal = llvm::ConstantInt::get(getLLVMCtx(), llvm::APInt(64, 0));
+      V->setInitializer(constVal);
       Globals[Var] = V;
     } else if (auto *Proc =
                    llvm::dyn_cast<ProcedureDeclaration>(
