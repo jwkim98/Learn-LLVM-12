@@ -195,7 +195,7 @@ void Sema::actOnProcedureDeclaration(
 
 void Sema::actOnAssignment(StmtList &Stmts, SMLoc Loc,
                            Decl *D, Expr *E) {
-  if (auto Var = dyn_cast<VariableDeclaration>(D)) {
+  if (auto* Var = dyn_cast<VariableDeclaration>(D)) {
     if (Var->getType() != E->getType()) {
       Diags.report(
           Loc, diag::err_types_for_operator_not_compatible,

@@ -27,6 +27,7 @@ CGProcedure::readLocalVariable(llvm::BasicBlock *BB,
   auto Val = CurrentDef[BB].Defs.find(Decl);
   if (Val != CurrentDef[BB].Defs.end())
     return Val->second;
+  //! If variable cannot be found in current block, search predecessors recursively
   return readLocalVariableRecursive(BB, Decl);
 }
 
@@ -70,7 +71,7 @@ void CGProcedure::addPhiOperands(llvm::BasicBlock *BB,
        I != E; ++I) {
     Phi->addIncoming(readLocalVariable(*I, Decl), *I);
   }
-  optimizePhi(Phi);
+  //optimizePhi(Phi);
 }
 
 void CGProcedure::optimizePhi(llvm::PHINode *Phi) {
@@ -155,6 +156,7 @@ llvm::Value *CGProcedure::readVariable(llvm::BasicBlock *BB,
     llvm::report_fatal_error("Unsupported declaration");
 }
 
+//! Maps current type to llvm::Type
 llvm::Type *CGProcedure::mapType(Decl *Decl) {
   if (auto *FP = llvm::dyn_cast<FormalParameterDeclaration>(
           Decl)) {
@@ -198,11 +200,17 @@ CGProcedure::createFunction(ProcedureDeclaration *Proc,
     FormalParameterDeclaration *FP =
         Proc->getFormalParams()[Idx];
     if (FP->isVar()) {
+      //! llvm::AttributeBuilder class is used to build the set of attributes for a formal parameter.
       llvm::AttrBuilder Attr(CGM.getLLVMCtx());
+      //! gets the storage size of the parameter type
       llvm::TypeSize Sz =
           CGM.getModule()->getDataLayout().getTypeStoreSize(
               CGM.convertType(FP->getType()));
+      //! This attribute means that pointer can be dereferenced
+      //! Means that we can read the value pointed to it by risking a protection fault
       Attr.addDereferenceableAttr(Sz);
+      //! Pointers cannot be passed around here. there are no copies of the pointer that outlive the
+      //! call to the function. Therefore, we do not capture or create alias of the pointer
       Attr.addAttribute(llvm::Attribute::NoCapture);
       Arg->addAttrs(Attr);
     }
@@ -371,10 +379,12 @@ void CGProcedure::emitStmt(WhileStatement *Stmt) {
   sealBlock(Curr);
   setCurr(WhileCondBB);
   llvm::Value *Cond = emitExpr(Stmt->getCond());
+  //! Create trailing branch instruction on while statement
   Builder.CreateCondBr(Cond, WhileBodyBB, AfterWhileBB);
 
   setCurr(WhileBodyBB);
   emit(Stmt->getWhileStmts());
+  //! Fill body expressions
   Builder.CreateBr(WhileCondBB);
   sealBlock(Curr);
   sealBlock(WhileCondBB);
@@ -437,6 +447,7 @@ void CGProcedure::run(ProcedureDeclaration *Proc) {
     if (auto *Var =
             llvm::dyn_cast<VariableDeclaration>(D)) {
       llvm::Type *Ty = mapType(Var);
+      //! Aggregate type means struct or array
       if (Ty->isAggregateType()) {
         llvm::Value *Val = Builder.CreateAlloca(Ty);
         Defs.Defs.insert(

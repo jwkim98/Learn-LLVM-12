@@ -43,7 +43,7 @@ void CGModule::run(ModuleDeclaration *Mod) {
   for (auto *Decl : Mod->getDecls()) {
     if (auto *Var =
             llvm::dyn_cast<VariableDeclaration>(Decl)) {
-      // Create global variables
+      // Create global variables with module declarations
       llvm::GlobalVariable *V = new llvm::GlobalVariable(
           *M, convertType(Var->getType()),
           /*isConstant=*/false,

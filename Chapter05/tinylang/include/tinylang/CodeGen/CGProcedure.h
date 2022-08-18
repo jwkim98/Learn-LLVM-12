@@ -54,6 +54,7 @@ class CGProcedure {
   llvm::FunctionType *createFunctionType(ProcedureDeclaration *Proc);
   llvm::Function *createFunction(ProcedureDeclaration *Proc, llvm::FunctionType *FTy);
 protected:
+  //! Sets current llvm::BasicBlock to work on
   void setCurr(llvm::BasicBlock *BB) {
     Curr = BB;
     Builder.SetInsertPoint(Curr);
