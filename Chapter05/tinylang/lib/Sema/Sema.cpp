@@ -1,5 +1,6 @@
 #include "tinylang/Sema/Sema.h"
 #include "llvm/Support/raw_ostream.h"
+#include <iostream>
 
 using namespace tinylang;
 
@@ -202,8 +203,17 @@ void Sema::actOnAssignment(StmtList &Stmts, SMLoc Loc,
           tok::getPunctuatorSpelling(tok::colonequal));
     }
     Stmts.push_back(new AssignmentStatement(Var, E));
-  } else if (D) {
-    // TODO Emit error
+  } else if (auto* Var = dyn_cast<FormalParameterDeclaration>(D)) {
+    if (Var->getType() != E->getType()){
+      Diags.report(
+          Loc, diag::err_types_for_operator_not_compatible,
+          tok::getPunctuatorSpelling(tok::colonequal));
+    }
+    Stmts.push_back(new AssignmentStatement(Var, E));
+  }
+  else
+  {
+    //! todo : emit error
   }
 }
 
@@ -419,6 +429,7 @@ Expr *Sema::actOnFunctionCall(Decl *D, ExprList &Params) {
 
 Decl *Sema::actOnQualIdentPart(Decl *Prev, SMLoc Loc,
                                StringRef Name) {
+
   if (!Prev) {
     if (Decl *D = CurrentScope->lookup(Name))
       return D;

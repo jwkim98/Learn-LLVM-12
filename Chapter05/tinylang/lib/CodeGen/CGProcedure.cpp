@@ -321,6 +321,7 @@ llvm::Value *CGProcedure::emitExpr(Expr *E) {
 
 void CGProcedure::emitStmt(AssignmentStatement *Stmt) {
   auto *Val = emitExpr(Stmt->getExpr());
+  //CurrentDef[basicBlock].Defs[Stmt->getVar()] = Val;
   writeVariable(Curr, Stmt->getVar(), Val);
 }
 
